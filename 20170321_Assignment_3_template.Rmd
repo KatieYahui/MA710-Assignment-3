@@ -111,15 +111,6 @@ as.data.frame(table(cluster))
 
 ### Evaluation: common words 
 
-[Use the `TopWords` and/or `check.clusters` function to check for common words in 
- each cluster which in the previous section you chose to 
- investigate further. 
- For each cluster indicate which words (if any) occur often enough
- to indicate a potential subject of the documents in the cluster.
- Indicate which clusters seem to have a potential subject and 
- should be investigated further.]
-
-
 ```{r echo=FALSE, warning=FALSE}
 check.clusters(cluster, 5) 
 ```
@@ -169,9 +160,9 @@ Algorithm  | k-means | Kept as default
 `k`        | 3 | Kept as default
 
 
-# Investigation ?
+# Iteration 2
 
-[Repeat this process until you are satisfied that you have found good clusters and until you are satisfied that you have tried enough options.]
+
   
 # Conclusion
 
