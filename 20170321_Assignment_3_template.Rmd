@@ -60,15 +60,15 @@ Parameter | Value | Reason
 Query term | "data science" | Interested in data science.
 Begin date | 03/21/2016 | Interested in March 2016 articles.
 End date   | 03/21/2017 | Interested in March 2017 articles.
-Field      | `snippet` | 
-Stemming   | No | 
-N-grams    | 1,2 |
+Field      | `snippet` | Kept as default
+Stemming   | No | Kept as default
+N-grams    | 1,2 | Kept as default
 Stopwords  | "english" and "SMART" |
 Stopwords  | "data science" | This is the search term.
-Weighting  | binary, TF-IDF, term frequency | 
-Threshold  | 2 |
-Algorithm  | k-means | 
-`k`        | 3 |
+Weighting  | binary, TF-IDF, term frequency | Kept as default
+Threshold  | 2 | Kept as default
+Algorithm  | k-means | Kept as default
+`k`        | 3 | Kept as default
 
 [Create your clusters here. Succinctly explain your code.] 
 
