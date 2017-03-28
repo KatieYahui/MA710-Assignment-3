@@ -18,7 +18,7 @@ This assignment uses New York Times data made available through its APIs for the
   
 # Create the dataset
 
- 
+The following libraries are loaded for the purpose of text mining. Setting the width to `Inf` allows us to see all columns. The `articlesearch.key` contains the API key received from NYTimes. The `get.nyt.hits` function returns the number of hits (articles) that contain the query string "data science" between the dates `21-Mar-2016` and `21-Mar-2017`. The function `article.df` creates  a dataframe of these articles called `article.df`.
  
 ```{r eval=FALSE}
 library(cluster)
@@ -60,15 +60,15 @@ Parameter | Value | Reason
 Query term | "data science" | Interested in data science.
 Begin date | 03/21/2016 | Interested in March 2016 articles.
 End date   | 03/21/2017 | Interested in March 2017 articles.
-Field      | `snippet` | Kept as default
-Stemming   | No | Kept as default
-N-grams    | 1,2 | Kept as default
+Field      | `snippet` | 
+Stemming   | No | 
+N-grams    | 1,2 |
 Stopwords  | "english" and "SMART" |
 Stopwords  | "data science" | This is the search term.
-Weighting  | binary, TF-IDF, term frequency | Kept as default
-Threshold  | 2 | Kept as default
-Algorithm  | k-means | Kept as default
-`k`        | 3 | Kept as default
+Weighting  | binary, TF-IDF, term frequency | 
+Threshold  | 2 |
+Algorithm  | k-means | 
+`k`        | 3 |
 
 [Create your clusters here. Succinctly explain your code.] 
 
