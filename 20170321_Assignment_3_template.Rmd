@@ -70,8 +70,6 @@ Threshold  | 2 | Kept as default
 Algorithm  | k-means | Kept as default
 `k`        | 3 | Kept as default
 
-[Create your clusters here. Succinctly explain your code.] 
-
 ```{r eval=TRUE}
 docs = article.df$snippet 
 docs.clean = clean.documents(docs)
@@ -151,32 +149,25 @@ TopWords(dtm, cluster, 1)
 view.cluster(1)
 ```
 
-[From your evaluation, decide which parameter you will change for the next investigation.]
+# Iteration 1
 
-# Investigation 2
+We include a few more stop words - "world","people" and "year" since these are high frequency words in most clusters.
 
-[Describe the option you will change from your previous investigation and why you chose it.
- Modify the following table to indicate the parameter choices you made for this investigation.
- Include the reasons you made these choices. If you did not change a parameter then simply
- copy the line from the previous table.]
-
-Parameter | Value | Reason
+ Parameter | Value | Reason
 --------- | ----- | ------
-Query term | "data science" | Interested in modern dance.
-Begin date | 03/21/2016 | Interested in 2016 articles.
-End date   | 03/21/2017 | Interested in 2017 articles.
-Field      | `snippet` | 
-Stemming   | Yes/No | 
-N-grams    | 1, 2 |
-Stopwords  | "english"/"SMART" |
-Stopwords  | "data science" | This is the search term.
-Weighting  | binary | 
-Threshold  | 2 |
-`k`        | 3 |
+Query term | "data science" | Interested in data science.
+Begin date | 03/21/2016 | Interested in March 2016 articles.
+End date   | 03/21/2017 | Interested in March 2017 articles.
+Field      | `snippet` | Kept as default
+Stemming   | No | Kept as default
+N-grams    | 1,2 | Kept as default
+Stopwords  | "english" and "SMART" | Kept as default
+Stopwords  | "data science" ,"world","people","year" | This is the search term.
+Weighting  | binary, TF-IDF, term frequency | Kept as default
+Threshold  | 2 | Kept as default
+Algorithm  | k-means | Kept as default
+`k`        | 3 | Kept as default
 
-[Evaluate the clusters you create.]
-
-[From your evaluation, decide which parameter you will change for the next investigation.]
 
 # Investigation ?
 
