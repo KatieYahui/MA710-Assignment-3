@@ -1,6 +1,6 @@
 ---
 title: "MA710 - New York Times Articles"
-author: "[put your names here]"
+author: "[Chengdong, Katie, Neha, Sev ]"
 date: "21 Mar 2017"
 output:
   html_document:
@@ -18,8 +18,7 @@ This assignment uses New York Times data made available through its APIs for the
   
 # Create the dataset
 
-[Do not run this each time you recreate your report.
- Make sure you break this into smaller code blocks and explain each.]
+ 
  
 ```{r eval=FALSE}
 library(cluster)
@@ -46,32 +45,30 @@ save(article.df,
 
 # Load the dataset
 
-[This is run every time you knit your report.]
+The dataset is first loaded from New York Times API during the period from March 21 2016 to March 21 2017. Then the dataset with articles from that period of time is downloaded and stored locally. Since we want to investigate how different parameters influence our clustering results, every time we run the adjusted code, we want the number of articles and the content of the articles to be constant. Every time we adjust the parameters, the dataset is read from local drive.  
+
 ```{r}
 load(file="~/Downloads/article.df.RData")
 ```
   
 # Base investigation
 
-[Start with a basic set of options, and explain why you chose them in the following table.]
 
-[Do not change the first two lines (27 and 28) of the table. 
-They define the columns and the headers.]
 
 Parameter | Value | Reason
 --------- | ----- | ------
-Query term | "dance" | Interested in modern dance.
-Begin date | 1 Jan 2017 | Interested in Jan 2017 articles.
-End date   | 31 Jan 2017 | Interested in Jan 2017 articles.
+Query term | "data science" | Interested in data science.
+Begin date | 03/21/2016 | Interested in March 2016 articles.
+End date   | 03/21/2017 | Interested in March 2017 articles.
 Field      | `snippet` | 
-Stemming   | Yes/No | 
-N-grams    | 1, |
-Stopwords  | "english"/"SMART" |
-Stopwords  | "dance" | This is the search term.
+Stemming   | No | 
+N-grams    | 1,2 |
+Stopwords  | "english" and "SMART" |
+Stopwords  | "data science" | This is the search term.
 Weighting  | binary, TF-IDF, term frequency | 
 Threshold  | 2 |
 Algorithm  | k-means | 
-`k`        | 10 |
+`k`        | 3 |
 
 [Create your clusters here. Succinctly explain your code.] 
 
@@ -165,17 +162,17 @@ view.cluster(1)
 
 Parameter | Value | Reason
 --------- | ----- | ------
-Query term | "dance" | Interested in modern dance.
-Begin date | 1 Jan 2015 | Interested in 2015 articles.
-End date   | 31 Dec 2015 | Interested in 2015 articles.
+Query term | "data science" | Interested in modern dance.
+Begin date | 03/21/2016 | Interested in 2016 articles.
+End date   | 03/21/2017 | Interested in 2017 articles.
 Field      | `snippet` | 
 Stemming   | Yes/No | 
 N-grams    | 1, 2 |
 Stopwords  | "english"/"SMART" |
-Stopwords  | "dance" | This is the search term.
+Stopwords  | "data science" | This is the search term.
 Weighting  | binary | 
 Threshold  | 2 |
-`k`        | 10 |
+`k`        | 3 |
 
 [Evaluate the clusters you create.]
 
