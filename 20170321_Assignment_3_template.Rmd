@@ -11,9 +11,6 @@ output:
 source(file="~/Downloads/20170321_TextMining_functions.R")
 ```
 
-[The text in square brackets are my notes to you. 
- Please remove them from your draft or final report.
-]
 
 # Introduction
 
