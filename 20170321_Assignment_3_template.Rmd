@@ -14,7 +14,7 @@ source(file="~/Downloads/20170321_TextMining_functions.R")
 
 # Introduction
 
-This assignment uses New York Times data made available through its APIs for the purpose of encouraging innnovation through collaboration.The Article Search API announced by New York Times is a way to find, discover, explore millions of articles from 1981 onwards. Each artcle is comprised of searchable fields such as headline, byline, lead paragraph, publication date and Article ID among others. We request an API key that allows us to retrieve these New York Times articles. The data is returned in JSON format.
+This assignment uses New York Times data made available through its APIs for the purpose of encouraging innnovation through collaboration.The Article Search API announced by New York Times in 2009 is a way to find, discover, explore millions of articles from 1981 onwards. Each artcle is comprised of searchable fields such as headline, byline, lead paragraph, publication date and Article ID among others. We request an API key that allows us to retrieve these New York Times articles. The data is returned in JSON format.
   
 # Create the dataset
 
