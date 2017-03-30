@@ -1,0 +1,363 @@
+---
+title: "MA710 - New York Times Articles - Data Science"
+author: "Sevdalena Lazarova"
+date: "21 Mar 2017"
+output:
+  html_document:
+    toc: yes
+---
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+source(file="C:/Users/sevda/Documents/Bentley/710/Assignment 3/20170321_TextMining_functions.R")
+```
+
+
+# Introduction
+
+This assignment uses New York Times data made available through its APIs for the purpose of encouraging innnovation through collaboration.The Article Search API announced by New York Times in 2009 is a way to find, discover, explore millions of articles from 1981 onwards. Each artcle is comprised of searchable fields such as headline, byline, lead paragraph, publication date and Article ID among others. We request an API key that allows us to retrieve these New York Times articles. The data is returned in JSON format.
+  
+# Create the dataset
+
+The following libraries are loaded for the purpose of text mining. Setting the width to Inf allows us to see all columns. The articlesearch.key contains the API key received from NYTimes. The get.nyt.hits function returns the number of hits (articles) that contain the query string "data science" between the dates 21-Mar-2016 and 21-Mar-2017. The function article.df creates a dataframe of these articles called article.df.
+ 
+```{r eval=FALSE}
+library(cluster)
+library(RCurl)
+library(RJSONIO)
+library(rlist)
+library(stringr)
+library(dplyr)
+library(magrittr)
+library(RTextTools)
+library(ngram)
+options(dplyr.width=Inf)
+articlesearch.key = "80663dd1c295412e867d24982fd695f8"
+get.nyt.hits(query.string="Oscar",     # OPTION
+             begin.date="20161126",    # OPTION
+             end.date  ="20170326")    # OPTION
+article.df = get.nyt.articles(pages = -1, 
+                              query.string = "Oscar",
+                              begin.date   = "20161126",
+                              end.date     = "20170426") 
+save(article.df, 
+     file="C:/Users/sevda/Documents/Bentley/710/Assignment 3/article.df.RData")
+```
+
+# Load the dataset
+
+We are loading the saved data frame every time we run or knit the document.
+
+```{r}
+load(file="C:/Users/sevda/Documents/Bentley/710/Assignment 3/article.df.RData")
+```
+  
+# Base investigation - Iteration 1
+
+
+Parameter | Value | Reason
+--------- | ----- | ------
+Query term | "Oscar" | Interested in exploring what were the topics related to the Oscars.
+Begin date | 26 October 2017 | Interested in exploring articles posted at less than 4 months from the Oscar date.
+End date   | 26 March 2017 | Interested in exploring articles posted less than a month after the Oscar event.
+Field      | `lead paragraph` | gives detailed information on the main topic
+Stemming   | No | We want to be able to group words based on stem
+N-grams    | 1 | we will start the exploration with 1 word grams
+Stopwords  | "english"/"SMART" | we will use "english"
+Stopwords  | "Oscar" | This is the search term.
+Weighting  | term frequency | We will weightTfIdf since we would like to focus on frequency of words in document offset by frequency of a word in the whole corpus
+Threshold  | 1 | We will start with threshold of 1 since the words in the articles related to Oscar have relatively low frequency values
+Algorithm  | k-means | we will start with kmeans as one of the fastest and most accurate clustering algorithms we have used so far
+`k`        | 6 | The first iteration will be with a random number of clusers which we decided to be equal to 6
+
+
+First we are selecting only the lead paragraph from the articles which were extracted from NY Times. The reason we are selecting the lead paragraph is because it contains short and very relevant information into the topic and the content of the corresponding articles.
+
+After that, we are cleaning the lead paragraphs documents by removing punctuation, unnecessary spacing, spaces at the end, 's at the end of the some words, dollar signs and any numbers are changed into spaces. the next step performs stemming in our case stemming is not selected as an option), then the stop words are removed. After which the function create_matrix is called which calculates the weighting of the terms. We use the tm::weightTfIdf option which basically calculated the frequency 
+
+```{r eval=TRUE}
+docs = article.df$lead_paragraph 
+docs.clean = clean.documents(docs)
+docs.sns = 
+  modify.words(
+    docs.clean,  
+    stem.words=FALSE,  # OPTION: TRUE or FALSE
+    ngram.vector=1, # OPTION: n-gram lengths
+    stop.words=       # OPTION: stop words
+      c(stopwords(kind="english")  
+        # OPTION: "SMART" or "english" 
+        # OPTION: additional stop words
+      )
+  )
+doc.matrix <- 
+  create_matrix(docs.sns, 
+                language="english",      # Do not change
+                stemWords=FALSE,         # Do not change
+                removePunctuation=FALSE, # Do not change
+                weighting=tm::weightTfIdf   # OPTION: weighting (see below)
+  )
+dtm = as.matrix(doc.matrix) 
+dtm=reduce.dtm(dtm,freq.threshold=1) 
+k = 6
+cluster = kmeans(dtm,k)$cluster
+```
+### Evaluation: cluster counts 
+
+The table below indicates the number of articles that are contained in each of our 6 clusters. 
+
+```{r echo=FALSE}
+as.data.frame(table(cluster))
+#  17  45   2   9   2  60 839  27   5   4 
+```
+
+We can see from the results, that the clusters are very unbalanced. We have cluster 1 as being with more than 1151 articles and cluster 4 and 6 with barely 1 and 2 articles in them. Since the results are not satisfactory we will proceed with another iteration in which we will change some of the parameters.
+
+
+# Base investigation - Iteration 2
+
+Before we perform further clustering, we will select the optimal number of clusters by using the clValid function to select the optimal number of clusters.
+
+```{r}
+library(clValid)
+
+clValid.result = clValid(dtm, nClust=2:10, clMethods=c("kmeans"), validation='internal', maxitems = nrow(dtm)) 
+print(summary(clValid.result))
+
+```
+
+When we choose the number of clusters, we are looking to maximize Dunn (which values are from 0 to infinity), to minimize Connectivity (which values ranges from 0 to infinity) and to maximize the Silhouette (which has values between 0 to 1). Based on the results, the best option for number of clusters is 2. We will use the kmeans clustering algorithm with number of cluster 2.
+
+
+Parameter | Value | Reason
+--------- | ----- | ------
+Query term | "Oscar" | Interested in exploring what were the topics related to the Oscars.
+Begin date | 26 October 2017 | Interested in exploring articles posted at less than 4 months from the Oscar date.
+End date   | 26 March 2017 | Interested in exploring articles posted less than a month after the Oscar event.
+Field      | `lead paragraph` | gives detailed information on the main topic
+Stemming   | No | We want to be able to group words based on stem
+N-grams    | 1 | we will start the exploration with 1 word grams
+Stopwords  | "english"/"SMART" | we will use "english"
+Stopwords  | "Oscar" | This is the search term.
+Weighting  | term frequency | We will weightTfIdf since we would like to focus on frequency of words in document offset by frequency of a word in the whole corpus
+Threshold  | 1 | We will start with threshold of 1 since the words in the articles related to Oscar have relatively low frequency values
+Algorithm  | k-means | we will start with kmeans as one of the fastest and most accurate clustering algorithms we have used so far
+`k`        | 2 | The first iteration will be with a random number of clusers which we decided to be equal to 6
+
+
+compared to the first iteration, we are changing only the number of clusters - in this case we will have two clusters instead of the initial 6. 
+
+```{r eval=TRUE}
+docs = article.df$lead_paragraph 
+docs.clean = clean.documents(docs)
+docs.sns = 
+  modify.words(
+    docs.clean,  
+    stem.words=FALSE,  # OPTION: TRUE or FALSE
+    ngram.vector=1, # OPTION: n-gram lengths
+    stop.words=       # OPTION: stop words
+      c(stopwords(kind="english")  
+        # OPTION: "SMART" or "english" 
+        # OPTION: additional stop words
+      )
+  )
+doc.matrix <- 
+  create_matrix(docs.sns, 
+                language="english",      # Do not change
+                stemWords=FALSE,         # Do not change
+                removePunctuation=FALSE, # Do not change
+                weighting=tm::weightTfIdf   # OPTION: weighting (see below)
+  )
+dtm = as.matrix(doc.matrix) 
+dtm=reduce.dtm(dtm,freq.threshold=1) 
+k = 2
+set.seed(123)
+cluster = kmeans(dtm,k)$cluster
+```
+
+
+
+### Evaluation: cluster counts 
+
+The table below indicates the number of articles that are contained in each cluster. 
+```{r echo=FALSE}
+as.data.frame(table(cluster))
+#  17  45   2   9   2  60 839  27   5   4 
+```
+
+Again we can see that the clusters are very unbalanced. We have an enormous cluster 2 which contains 1194 of the articles and cluster 2 which contains barely 3 articles.
+
+Since this was the best number of clusters based on the results from the clValid function, we will explore further what are the clusters common words and top words characteristics.
+
+### Evaluation: common words 
+
+We will explore the most common words in each of the clusters and whether we can determine a general topic for the given clusters.
+
+
+```{r echo=FALSE, warning=FALSE}
+check.clusters(cluster, 1) 
+```
+
+Based on the results, we can see that cluster 2 is a mix of various articles without a common theme to them. While cluster 1 focuses on articles which focus on "mood", "party", "Cheng and "Hollywood".
+
+As we initially noticed, the first cluster is too general and contains a significant number of articles, while the second cluster is more focused and combines articles which revolve around the Oscars party, Hollywood, the overall mood of the party etc.
+
+We can perform a more focused exploration of the top words in each clusters, however we expect the results are similar to what we have already observed.
+
+```{r echo=FALSE, warning=FALSE}
+# The `TopWords` function displays the documents 
+# in the cluster whose number is specified with 
+# third parameter
+TopWords(dtm, cluster, 1) 
+```
+
+```{r echo=FALSE, warning=FALSE}
+# The `TopWords` function displays the documents 
+# in the cluster whose number is specified with 
+# third parameter
+TopWords(dtm, cluster, 2) 
+```
+
+Again we can see the more focused topics of the articles in Cluster 1 which relate to the Oscar party and overall the emotions around the Oscars while the second cluster is a mix of different topics.
+
+
+### Evaluation: check documents  
+
+We will have a look at the first 10 of the articles in Cluster 1 and we can see that the topics are really about the party, Fredy Chend and Hollywood.
+ 
+```{r echo=FALSE}
+view.cluster(1)
+```
+
+Based on our evaluation so far and the lack of satisfactory clusering results, we will look further into forming clusters by changing the weighting method from weightTfIdf (inverse document frequency) to term frequency.
+ 
+# Base investigation - Iteration 3
+
+We are starting with similar parameters as in Iteration 2, however this time will use the term frequency weighting method to see whether we will be able to notice any significant difference in the results.
+
+Parameter | Value | Reason
+--------- | ----- | ------
+Query term | "Oscar" | Interested in exploring what were the topics related to the Oscars.
+Begin date | 26 October 2017 | Interested in exploring articles posted at less than 4 months from the Oscar date.
+End date   | 26 March 2017 | Interested in exploring articles posted less than a month after the Oscar event.
+Field      | `lead paragraph` | gives detailed information on the main topic
+Stemming   | No | We want to be able to group words based on stem
+N-grams    | 1 | we will start the exploration with 1 word grams
+Stopwords  | "english"/"SMART" | we will use "english"
+Stopwords  | "Oscar" | This is the search term.
+Weighting  | term frequency | We will weightTf since we would like to focus on frequency of words
+Threshold  | 1 | We will start with threshold of 1 since the words in the articles related to Oscar have relatively low frequency values
+Algorithm  | k-means | we will start with kmeans as one of the fastest and most accurate clustering algorithms we have used so far
+`k`        | 2 | The first iteration will be with a random number of clusers which we decided to be equal to 6
+
+
+
+
+```{r eval=TRUE}
+docs = article.df$lead_paragraph 
+docs.clean = clean.documents(docs)
+docs.sns = 
+  modify.words(
+    docs.clean,  
+    stem.words=FALSE,  # OPTION: TRUE or FALSE
+    ngram.vector=1, # OPTION: n-gram lengths
+    stop.words=       # OPTION: stop words
+      c(stopwords(kind="english")  
+        # OPTION: "SMART" or "english" 
+        # OPTION: additional stop words
+      )
+  )
+doc.matrix <- 
+  create_matrix(docs.sns, 
+                language="english",      # Do not change
+                stemWords=FALSE,         # Do not change
+                removePunctuation=FALSE, # Do not change
+                weighting=tm::weightTf   # OPTION: weighting (see below)
+  )
+dtm = as.matrix(doc.matrix) 
+dtm=reduce.dtm(dtm,freq.threshold=1) 
+```
+
+
+Before we perform further clustering, we will select the optimal number of clusters by using the clValid function to select the optimal number of clusters.
+
+```{r}
+library(clValid)
+
+clValid.result = clValid(dtm, nClust=2:10, clMethods=c("kmeans"), validation='internal', maxitems = nrow(dtm)) 
+print(summary(clValid.result))
+
+```
+
+When we choose the number of clusters, we are looking to maximize Dunn (which values are from 0 to infinity), to minimize Connectivity (which values ranges from 0 to infinity) and to maximize the Silhouette (which has values between 0 to 1). Based on the results, the best option for number of clusters is 2. We will use the kmeans clustering algorithm with number of cluster 2.
+
+
+```{r}
+k = 2
+set.seed(123)
+cluster = kmeans(dtm,k)$cluster
+```
+
+
+
+### Evaluation: cluster counts 
+
+The table below indicates the number of articles that are contained in each cluster. 
+```{r echo=FALSE}
+as.data.frame(table(cluster))
+#  17  45   2   9   2  60 839  27   5   4 
+```
+
+Again we can see that the clusters are relatively unbalanced. We have an enormous cluster 1 which contains 1083 of the articles and cluster 2 which contains barely 114 articles.
+
+Since this was the best number of clusters based on the results from the clValid function, we will explore further what are the clusters common words and top words characteristics.
+
+### Evaluation: common words 
+
+We will explore the most common words in each of the clusters and whether we can determine a genral topic for the given clusters.
+
+
+```{r echo=FALSE, warning=FALSE}
+check.clusters(cluster, 1) 
+```
+
+Based on the results, we can see that cluster 1 is a mixed of various articles without a common theme to theme. While cluster 2 focuses on articles which mention New York as a focus.
+
+As we initially noticed, the first cluster is too general and contains a significant number of articles, while the second cluster is more focused and combines articles which revolve around President Donald Trump.
+
+We can perform a more focused exploration of the top words in each clusters, however the results are similar to what we have already observed.
+
+```{r echo=FALSE, warning=FALSE}
+# The `TopWords` function displays the documents 
+# in the cluster whose number is specified with 
+# third parameter
+TopWords(dtm, cluster, 1) 
+```
+
+```{r echo=FALSE, warning=FALSE}
+# The `TopWords` function displays the documents 
+# in the cluster whose number is specified with 
+# third parameter
+TopWords(dtm, cluster, 2) 
+```
+
+Again we can see the more focused topics of the articles in Cluster 2 which relate to New York.
+
+
+### Evaluation: check documents  
+
+We will have a look at the first 10 of the articles in Cluster 2 and we can see that the topics are really about New York.
+ 
+```{r echo=FALSE}
+view.cluster(2)[0:10]
+```
+
+We can see that the second cluster is about Oscar de la Renta and his affairs in New york. We can conclude that our articles contain information not only about the Oscars but also about a famous designer Oscar de la Renta.
+
+Based on the second and the third iteration, we can see that the weight we choose determines the type of the clusters being formed. In the second iteration in which weighting=tm::weightTfIdf we observed a very large first cluster and very small second cluster with only three articles describing the Oscar party and the mood of the party. With the third iteration in which we set weighting=tm::weightTf, we observed a relatively small but theme focused first cluster and very large but diverse second cluster. The theme of the first cluster was New York city and news related to the fashion company Oscar de la Renta. When the weighting was set to tm::weightTf, we can observe better result related to clustering.
+
+  
+# Conclusion
+
+[Describe the final modifications used to create your clusters 
+ and describe the clusters of the cluster group.]
+
+[Explain why this is the best set of options/parameters and clusters.]
