@@ -571,7 +571,7 @@ After we got the matrix, we go with k-means clustering with 4 clusters.
 ```{r}
 k = 4
 set.seed(127)
-cluster = kmeans(dtm,k)$cluster
+cluster = kmeans(dtm,centers= k, iter.max= 100, nstart= 50)$cluster
 ```
 
 ### Evaluation: cluster counts 
@@ -581,7 +581,7 @@ The table below indicates the number of articles that are contained in each clus
 as.data.frame(table(cluster))
 ```
 
-From the frequency, the cluster 2 has the largest size, which contains 896 articles. However, cluster 1 only contains 19 articles. The clustering result is unbalanced.
+From the frequency, the cluster 1 has the largest size, which contains 883 articles. However, cluster 4 only contains 58 articles. The clustering result is unbalanced.
 
 We need to explore further with common words.
 
@@ -592,31 +592,33 @@ We will explore the most common words in each of the clusters and whether we can
 check.clusters(cluster, 1) 
 ```
 
-Based on the result, we could find cluster 1 is actually about a famous basketball player Russell Westbrook. The common words "Oklahoma City Thunder" indicates the team that Russell Westbrook plays for. And once we combine common words "triple" and "double" together, we could get "Triple-Double", a basketball term stands for the accumulation of a double-digit number total in three of the five categories in a game. The relationship between Russell Westbrook and Oscar is interesting: Oscar Robertson is a great basketball player who legendarily averaged a triple-double for an entire season (and almost did so again the following year). Russell Westbrook tied an Oscar Robertson record with his lastest triple-double. We guess that is the reason why Russell Westbrook stands as the first cluster.
+Cluster 1 has common words as "film", "first", "new", "day", "year". The theme of the cluster is ambiguous and we could only guess it is a collection of articles talks about the Oscars, which makes perfect sense because it it the largest clusters out of four.
 
-Cluster 2 has common words as "film", "first", "new", "day", "night". The theme of the cluster is ambiguous and we could only guess it is a collection of articles talks about the Oscars, which makes perfect sense because it it the largest clusters out of four.
+Cluster 2 is pretty interesting. The 89th Academy Awards ceremony took place on February 26, 2017. The common word "Sunday" indicates the date (February 26 is a Sunday).  It talks about a hot spot of OScars 2017- "La La land" mistakenly named best picture. It is a massive mistake, after presenter Faye Dunaway awarded "La La Land" the best picture Oscar that should have gone to "Moonlight" instead. "La La Land" was predicted to be the best film (common word "best film") and to win the best picture awards by many organizations before the ceremony.  This is also a reason why the mixup is so coincidental. It is reasonable that there are 242 articles talks about this news after the Oscars.
 
-Cluster 3 is predominant by U.S. president Donald Trump. There are 50 records inside of the cluster and looks like our president cares about Oscars too, which is not suprising at all.
+Topic of the cluster 3 is about Oscar nominations of the year. From the common words "Oscar nominated", "best", "winning" and "hollywood", we could reasonably conclude that aritcles inside of this cluster mainly talk about Oscar nomination and people may argue which nominatied film would win the reward finally.
 
-Cluster 4 is pretty interesting. The 89th Academy Awards ceremony took place on February 26, 2017. The common word "Sunday" indicates the date (February 26 is a sunday).  It talks about a hot spot of OScars 2017- "La La land" mistakenly named best picture. It is a massive mistake, after presenter Faye Dunaway awarded "La La Land" the best picture Oscar that should have gone to "Moonlight" instead. "La La Land" was predicted to be the best film (common word "best film"") and to win the best picture awards by many organizations before the ceremony.  This is also a reason why the mixup is so coincidental. It is reasonable that there are 242 articles talks about this news after the Oscars.
+Cluster 4 is predominant by U.S. president Donald Trump. There are 58 records inside of the cluster and looks like our president cares about Oscars too, which is not suprising at all.
 
 ### Evaluation: check documents  
 
-We will have a look at the first 10 of the articles in Cluster 1. 
+We will have a look at the first 10 of the articles in Cluster 2. 
 
 ```{r echo=FALSE}
-view.cluster(1)[0:10]
+view.cluster(2)[0:10]
 ```
 
-We can see that the topic is really about Russell Westbrook tied an Oscar Robertson record with his lastest triple-double.
+We could find that the second cluster is truly about "La La land" mistakenly named best picture. 
 
-And we could also take a look at the first 10 of the articles in Cluster 4:
+And we could also take a look at the first 10 of the articles in Cluster 3:
+
 
 ```{r echo=FALSE}
-view.cluster(4)[0:10]
+view.cluster(3)[0:10]
 ```
 
-We can see that the second cluster is about "La La land" mistakenly named best picture. Especially from article 5, 7 and 9. 
+From the documents check, we could conclude that the topic of cluster 3 is the Oscar nomination of 2017. It mathches the clustering result very well.
+
 
 We could conclude that the clustering method works well for our clusters. We could define the topic of each clusters by simply looking at the top words or common words of the clusters.  
 
