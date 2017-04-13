@@ -1,0 +1,239 @@
+---
+title: "Assignment 1 - MA710 Bentley"
+output: html_document
+---
+
+## 1. Introduction
+
+The data we are working on is provided by the U.S department of Education. The data set contains information of College Scorecard, federal financial aid and students' earning records. The data set can help to understand the information of getting federal financial and have insights on the school performance as well as students' long term development. The data set contains 1743 variables which are organized into 10 categories. The categories cover a range of topics:
+
+ * Root - basic information such as School Id and location.
+
+ * School - basic descriptive information such as degree types, number of branches, Carnegie classification, Public or Private etc.
+
+ * Academics - types of academics available at the school.
+
+ * Admissions - admission statistics such as acceptance rate and SAT/ACT scores.
+
+ * Student - descriptions of the students including the number of undergraduate students, part-time or full-time students, share of first generation students.
+
+ * Cost - information  cost for students such as average cost of attendance, tuition and fees, and average net price for institutions by income level.
+
+ * Aid - the amount of debt a student can take on while attending the college, typical monthly loan payments, and the percentage of Pell Grant Recipients.
+
+ * Repayment - descriptions of how successful students are at repaying their debts which is measured by cohort default rate and repayment rate.
+
+ * Completion - information on the completion and retention rates for first time and full time students.
+
+ * Earnings - statistics on average and median earnings as well as share of former students' earning more than $25,000. 
+
+
+Based on the information provided by the data set,the descriptive analysis is performed. 
+
+
+## 2.Goals
+"Private colleges vs. public colleges". There is a face-off that is been ongoing for many years. The major difference between public and private colleges lies in how they are funded. Public colleges are funded mostly by state governments, whereas private colleges rely heavily on private contributions, donations and tuition. The goal of our analysis is to build a model which predicts whether an institution is public or private based on a numer of variables describing the colleges. The variables we will use include percentage of first time college graduates, percentage of female students, types of degree awarded, annual cost of attendance.  
+
+
+## 3.DataSet Description
+
+There are 26 variables that we are interested in. The variables name,  type and descriptions are listed below. 
+
+*For variable `NPT4_PRIV` and `NPT4_PUB`, they includes tuition, supplies, living expenses minus the average grand or scholarship; the cost is calculated for full-time, fist-time, degree and certificate seeking undergraduates
+
+
+|Variables        |Type     |Descriptions|
+|-----------------|---------|-------------------------------
+|Type             |FACTOR     |Public or Private Institution |
+|Family_Inc       |NUMERIC    |Average family income in real 2015 dollars ($)|
+|Female           |NUMERIC    |Percentage of female students|
+|Married          |NUMERIC    |Percentage of married students|
+|DEP_STAT_PCT_IND |NUMERIC    |Percentage of financially independent students|
+|First_Gen        |NUMERIC    |Percentage of first generation students|
+|NPT4_PRIV        |NUMERIC    |Average annual cost of attendance a Private college ($)|
+|NPT4_PUB         |NUMERIC    |Average annual cost of attendance a Public college ($)|
+|NUMBRANCH        |NUMERIC    |Number of Branch Campuses|
+|PCIP01           |NUMERIC    |Percentage of degrees awarded in Agriculture , Agriculture Operations, And Related Sciences|
+|PCIP03           |NUMERIC    |Percentage of degrees awarded in Natural Resources And Conservation|
+|PCIP04           |NUMERIC    |Percentage of degrees awarded in Architecture And Related Services|
+|PCIP05           |NUMERIC    |Percentage of degrees awarded in Area, Ethnic, Cultural, Gender, And Group Studies|
+|PCIP09           |NUMERIC    |Percentage of degrees awarded in Communication, Journalism, And Related Programs|
+|PCIP10           |NUMERIC    |Percentage of degrees awarded in Communications Technologies/Technicians And Support Services|
+|CDR3             |NUMERIC    |Three-year cohort default rate|
+|CDR3_DENOM       |NUMERIC    |Number of students in the cohort for the three-year cohort default rate|
+|PCTPELL          |NUMERIC    |Percentage of undergraduates who receive a Pell Grant|
+|PCTFLOAN         |NUMERIC    |Percent of all federal undergraduate students receiving a federal student loan|
+|DEBT_N           |NUMERIC    |The number of students in the median debt completers cohort|
+|CUML_DEBT_N      |NUMERIC    |Number of students in the cumulative loan debt cohort|
+
+
+
+## 4.Objectives
+
+Our main goal of the project is to predict whether an institution is public or private. Based on this goal, we will define a number of objectives:
+
+
+* Apply k neighbour and regression tree model algorithms for predicting the type of institution
+* Fine tune the parameters of each of the algorithms in order to improve the prediction power
+* Compare the results between the two algorithms
+* Investigate which of the used variables are more important in determining the type of college
+
+
+## 5.Data Preparation
+
+Before applying both predictive algorithms, we will perform some data cleaning and preparation.
+
+### 5.1 Loading libraries
+
+We will load the `dplyr` package that contains functions for data manipulation using data frames. It allows us to order rows, select rows, select variables, modify variables and summarize variables. We will also load the `ggplot2` package which is a powerful plotting package that creates elegant and complex plots in R. The `magrittr` library is loaded for the piping operator `%>%`. The `readr` library is loaded to read in the csv file.
+
+```{r,message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(readr)
+```
+
+Then we read in the csv file `MERGED2014_15_PP.csv` into the data frame `csb.df` using the `read_csv` function of the `readr` package.
+
+```{r,message=FALSE, warning=FALSE}
+csb.df = read_csv(paste0('C:/Users/sevda/Documents/Bentley/710/Assignment 1/CollegeScorecard_Raw_Data/CollegeScorecard_Raw_Data/', 'MERGED2014_15_PP.csv'))
+
+```
+### 5.3 Data cleaning and variable modification
+
+For our analysis, we wish to include only those institutions which are currently operating. So we filter the rows to keep those which have `CURROPER` equal to 1.
+
+```{r,message=FALSE, warning=FALSE}
+csb.df %>%
+  filter(CURROPER ==1) %>%
+  {.} -> csbop.df
+```
+The new data frame `csbop.df` consists of only currently operating institutions.
+Based on our decision to select certain variables, we will use the `SELECT` command from `dply` package to create a smaller data frame which contains only the variables of interest.
+
+```{r,message=FALSE, warning=FALSE}
+csbop.df %>%
+  select(CONTROL, FAMINC, FEMALE, MARRIED,DEP_STAT_PCT_IND, FIRST_GEN, NPT4_PRIV, NPT4_PUB, NUMBRANCH, 
+         PCIP01,PCIP03,PCIP04,PCIP05,PCIP09,PCIP10, CDR3, CDR3_DENOM, PCTPELL, PCTFLOAN,
+          DEBT_N, CUML_DEBT_N) %>%
+  {.} -> csb.vars.df
+```
+The resulting data frame `csb.vars.df` contains only the selected variables. Next we get a glimpse of this new data frame `csb.vars.df`. The `glimpse` function allows us to see all the columns in the data frame.
+
+```{r,message=FALSE, warning=FALSE}
+glimpse(csb.vars.df)
+```
+
+The output tells us that the data frame `csb.vars.df` has 6893 observations and 27 variables. It also displays the class of these variables.We can see that some of the variables do no belong to the correct class. For instance, `CONTROL`(Type of institution - Public or Private) should be a factor variable, but it is an integer in the data frame. Similarly FEMALE (Percentage of female students) should be an integer, and not a character variable.
+
+To convert the class of these variables to the desired class, we use the functions `as.numeric` and `as.factor`, which convert the class variables to `numeric` and `factor` respectively.The code below uses the `MUTATE` command from the `dplyr` library to alter variables of the input data frame `csb.vars.df` and returns the modified data frame `csb.class.df`. 
+
+```{r,message=FALSE, warning=FALSE}
+csb.vars.df %>% 
+  mutate(
+         #CONTROL    = as.factor(CONTROL),
+         FAMINC  = as.numeric(FAMINC),
+         FEMALE = as.numeric(FEMALE), 
+         MARRIED  = as.numeric(MARRIED),
+         DEP_STAT_PCT_IND = as.numeric(DEP_STAT_PCT_IND),
+         FIRST_GEN = as.numeric(FIRST_GEN),
+         NPT4_PRIV = as.numeric(NPT4_PRIV),
+         NPT4_PUB = as.numeric(NPT4_PUB),
+         NUMBRANCH = as.numeric(NUMBRANCH),
+         PCIP01=as.numeric(PCIP01),
+         PCIP03=as.numeric(PCIP03),
+         PCIP04=as.numeric(PCIP04),
+         PCIP05=as.numeric(PCIP05),
+         PCIP09=as.numeric(PCIP09),
+         PCIP10=as.numeric(PCIP10),
+         CDR3 = as.numeric(CDR3), 
+         CDR3_DENOM  = as.numeric(CDR3_DENOM),
+         PCTPELL = as.numeric(PCTPELL),
+         PCTFLOAN = as.numeric(PCTFLOAN),
+         DEBT_N = as.numeric(DEBT_N),
+         CUML_DEBT_N = as.numeric(CUML_DEBT_N)) %>%
+         {.} -> csb.var.df
+```
+
+The next step is to check for the percentage of NA (missing) values for the above range of variables. This is accomplished by first adding the number of NA values for each variable, dividing it by the `length` of the variable(total number of observations) and multiplying by 100 to convert it into percentage. 
+
+Since we would like to apply this function to a range of variables, we use `summarise_at` command. `summarise_at` takes the set of columns to be summarized as the first parameter which in our case wold be all columns and the function to be applied to them as the second parameter.
+
+```{r,message=FALSE, warning=FALSE}
+csb.var.df %>% 
+  summarise_at(.cols = vars(),
+               .funs = function(x) sum(is.na(x))/length(x))*100
+```
+
+We can observe from the output that `FAMINC` has 4.16% missing values, `MARRIED` has 15.32% missing values and so on. Since some of the algorithms we will apply do not accept missing values and we would like to compared the algorithms based on their performance, we will remove the missing values. But before we perform the removal, we will make a number of additional variable transformations.
+
+As the goal of our project is to compare public and private institutions, we want to combine the two types of private institutions : private for-profit and private non-profit into one group called private institutions. We use the `ifelse` command to achieve this by assigning level 0 ( private) to those institutions with a value of 2 (private for-profit) or 3(private non-profit) and level 1 to public institutions. 
+
+```{r,message=FALSE, warning=FALSE}
+
+csb.var.df %>%
+  mutate(CONTROL = ifelse((CONTROL==2|CONTROL==3),"Public","Private")) %>%
+  mutate(CONTROL    = as.factor(CONTROL)) %>%
+  {.} ->csb.new.df
+```
+
+The data frame `csb.new.df` now contains the mutated variable `CONTROL` with only two levels - 0 for private institutions and 1 for public institutions.
+
+The variables `NTP4_PRIV` and `NTP4_PUB` describes the average net price of either Public or Private colleges, and are complementing each other. For this reason, we will built a new variable `NPT4` which describes the average net price for both public and private colleges.
+
+To do this, we first define a function `replace_na_values` which takes the variable as the input and by looping over the entire length of the variable, replaces each NA values by 0.  We call this function on our two variables `NPT4_PRIV` and `NPT4_PUB`. Then we create a new variable `NPT4` by adding the two variables `NPT4_PRIV` and `NPT4_PUB` using the `MUTATE` command.
+
+```{r, cache=TRUE,message=FALSE, warning=FALSE}
+  replace_na_values <- function (variable){
+    for (i in 1:length(variable)){
+      if (is.na(variable[i])){
+        variable[i] = 0
+      }
+    }
+    return (variable)
+  }
+
+csb.new.df %>% 
+  mutate(NPT4 = replace_na_values(NPT4_PRIV) + replace_na_values(NPT4_PUB)) %>%
+  {.} -> csb.new.df
+
+csb.new.df %>% select(-NPT4_PRIV, -NPT4_PUB) %>% {.} -> csb.new.df
+```
+
+After we have performed the transformation of some of the variables, we will remove the observations with missing values.
+
+```{r}
+require(IDPmisc)
+
+csb.omit.na.df = NaRV.omit(csb.new.df)
+```
+
+Since the names of these variables are not easy to understand, we rename them using the `rename` function of the `dplyr` package.
+
+```{r,message=FALSE, warning=FALSE}
+csb.omit.na.df %>%
+  rename(Type = CONTROL,
+         Family_Inc = FAMINC,
+         Female_perc = FEMALE,
+         Married_perc = MARRIED,
+         Fin_Indep_perc = DEP_STAT_PCT_IND,
+         First_Gen_perc = FIRST_GEN,
+         Cost = NPT4,
+         Num_Branches = NUMBRANCH, 
+         Agric_deg_perc = PCIP01,
+         Nature_deg_perc = PCIP03,
+         Architect_deg_perc = PCIP04,
+         Cultural_deg_perc = PCIP05,
+         Communication_deg_perc = PCIP09,
+         Technology_deg_perc= PCIP10, 
+         Cohort_def_rate = CDR3, 
+         Num_students_cohort = CDR3_DENOM, 
+         Pell_grant_perc = PCTPELL, 
+         Deg_loan_perc = PCTFLOAN,
+         Num_stud_median_debt =  DEBT_N, 
+         Num_stud_cum_debt = CUML_DEBT_N) %>%
+         {.} -> csb.ren.df
+```
+The data frame `csb.ren.df` contains our final set of variables, ready for further analysis.
+
